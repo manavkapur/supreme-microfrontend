@@ -23,7 +23,7 @@ export const NotificationProvider = ({ children }) => {
       onConnect: () => {
         console.log("✅ Connected to /ws");
 
-        client.subscribe("/topic/quotes", (msg) => {
+        client.subscribe("/topic/updates", (msg) => {
           console.log("📩 Quote Event Raw:", msg.body);
 
           let data;
