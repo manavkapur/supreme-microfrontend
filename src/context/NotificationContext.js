@@ -7,54 +7,57 @@ import "react-toastify/dist/ReactToastify.css";
 
 export const NotificationContext = createContext();
 
-export const NotificationProvider = ({ children }) => {
+export const NotificationProvider = ({ children, username, role }) => {
   const [messages, setMessages] = useState([]);
-  const clientRef = useRef(null); // Prevent duplicate clients
+  const clientRef = useRef(null);
 
   useEffect(() => {
     console.log("🌐 Connecting to WebSocket...");
 
-    // 🛑 Prevent multiple client instances (React Strict Mode in dev runs effects twice)
     if (clientRef.current) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS("http://localhost:8083/ws"),
+      webSocketFactory: () => new SockJS(`http://localhost:8085/ws?username=${username}`),
       reconnectDelay: 5000,
+
+      // 👇 Send username header so Spring knows who this connection belongs to
+      connectHeaders: {
+        login: username,
+        passcode: "guest", // dummy (Spring ignores it by default)
+      },
+
       onConnect: () => {
         console.log("✅ Connected to /ws");
 
-        client.subscribe("/topic/updates", (msg) => {
-          console.log("📩 Quote Event Raw:", msg.body);
+const userQueue = "/user/queue/updates"; // ✅ no username here!
+client.subscribe(userQueue, (msg) => {
+  console.log(`🎯 User-specific message for ${username}:`, msg.body);
+  toast.success(`🔔 ${msg.body}`, { position: "bottom-right" });
+});
+console.log(`🎯 Subscribed to ${userQueue}`);
 
-          let data;
-          try {
-            data = JSON.parse(msg.body);
-          } catch {
-            data = { message: msg.body };
-          }
 
-          console.log("✅ Parsed Quote Event:", data);
-
-          // ✅ Update state cleanly (no toast inside)
-          setMessages((prev) => [...prev, data]);
-
-          // ✅ Toast triggered outside React render scope
-          const messageText =
-            data.message ||
-            `${data.event || "Quote update"} | ${data.status || "N/A"}`;
-
-          toast.info(`💬 ${messageText}`, {
-            position: "bottom-right",
-            autoClose: 5000,
-            closeOnClick: true,
-            pauseOnHover: true,
-            theme: "colored",
+        // ✅ Admin-only topic
+        if (role === "ADMIN") {
+          client.subscribe("/topic/admins", (msg) => {
+            console.log("📩 Message (admin):", msg.body);
+            toast.info(`👑 Admin: ${msg.body}`, { position: "bottom-right" });
           });
+          console.log("📡 Subscribed to /topic/admins (Admin)");
+        }
+
+        // ✅ Public topic (for all)
+        client.subscribe("/topic/updates", (msg) => {
+          console.log("📢 Public update:", msg.body);
+          toast.info(`💬 ${msg.body}`, { position: "bottom-right" });
         });
+        console.log("📢 Subscribed to /topic/updates (Public)");
       },
+
       onStompError: (frame) => {
         console.error("❌ STOMP error:", frame);
       },
+
       debug: (str) => console.log("🔌 [STOMP]", str),
     });
 
@@ -66,7 +69,7 @@ export const NotificationProvider = ({ children }) => {
       client.deactivate();
       clientRef.current = null;
     };
-  }, []);
+  }, [username, role]);
 
   return (
     <NotificationContext.Provider value={{ messages }}>

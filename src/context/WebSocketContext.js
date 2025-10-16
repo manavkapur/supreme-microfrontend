@@ -6,26 +6,48 @@ import { toast } from "react-toastify";
 
 export const WebSocketContext = createContext();
 
-export const WebSocketProvider = ({ children }) => {
+export const WebSocketProvider = ({ children, username }) => {
   const [connected, setConnected] = useState(false);
   const [client, setClient] = useState(null);
 
   useEffect(() => {
-    const socket = new SockJS("http://localhost:8085/ws");
+    if (!username) {
+      console.warn("⚠️ No username provided for WebSocket connection!");
+      return;
+    }
+
+    console.log("🌐 Connecting WebSocket for user:", username);
+
+    const socket = new SockJS(`http://localhost:8085/ws?username=${username}`);
 
     const stompClient = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
+      connectHeaders: {
+        login: username,
+        passcode: "guest",
+      },
       onConnect: () => {
-        console.log("✅ Connected to WebSocket server");
+        console.log("✅ Connected to WebSocket server as", username);
         setConnected(true);
 
-        // Subscribe to messages from the backend
+        // Subscribe to public updates
         stompClient.subscribe("/topic/updates", (msg) => {
           const message = msg.body;
-          console.log("📩 Message received:", message);
+          console.log("📩 Public Message received:", message);
 
           toast.info(`🔔 ${message}`, {
+            position: "bottom-right",
+            autoClose: 4000,
+            theme: "colored",
+          });
+        });
+
+        // Subscribe to user-specific queue
+        const userQueue = `/user/${username}/queue/updates`;
+        stompClient.subscribe(userQueue, (msg) => {
+          console.log(`🎯 Private message for ${username}:`, msg.body);
+          toast.success(`💬 ${msg.body}`, {
             position: "bottom-right",
             autoClose: 4000,
             theme: "colored",
@@ -43,7 +65,7 @@ export const WebSocketProvider = ({ children }) => {
     return () => {
       if (stompClient) stompClient.deactivate();
     };
-  }, []);
+  }, [username]);
 
   return (
     <WebSocketContext.Provider value={{ connected, client }}>
