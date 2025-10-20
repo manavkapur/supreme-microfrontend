@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export const NotificationContext = createContext();
 
-export const NotificationProvider = ({ children, username, role }) => {
+export const NotificationProvider = ({ children, role }) => {
   const [messages, setMessages] = useState([]);
   const clientRef = useRef(null);
 
@@ -16,42 +16,49 @@ export const NotificationProvider = ({ children, username, role }) => {
 
     if (clientRef.current) return;
 
+    // ✅ Grab JWT token from localStorage
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("🚫 No JWT token found — aborting WebSocket connection");
+      return;
+    }
+
+    // ✅ Use SockJS (required for Spring STOMP)
+    const socketUrl = "http://localhost:8083/ws"; // <-- cleaned up
+
+    // ✅ Create STOMP client
     const client = new Client({
-      webSocketFactory: () => new SockJS(`http://localhost:8085/ws?username=${username}`),
+      webSocketFactory: () => new SockJS(socketUrl),
       reconnectDelay: 5000,
 
-      // 👇 Send username header so Spring knows who this connection belongs to
+      // ✅ Send JWT via headers
       connectHeaders: {
-        login: username,
-        passcode: "guest", // dummy (Spring ignores it by default)
+        Authorization: `Bearer ${token}`,
       },
 
       onConnect: () => {
-        console.log("✅ Connected to /ws");
+        console.log("✅ Authenticated connection established via SockJS");
 
-const userQueue = "/user/queue/updates"; // ✅ no username here!
-client.subscribe(userQueue, (msg) => {
-  console.log(`🎯 User-specific message for ${username}:`, msg.body);
-  toast.success(`🔔 ${msg.body}`, { position: "bottom-right" });
-});
-console.log(`🎯 Subscribed to ${userQueue}`);
+        // 🎯 Subscribe to user-specific queue
+        const userQueue = "/user/queue/updates";
+        client.subscribe(userQueue, (msg) => {
+          console.log("🎯 User-specific:", msg.body);
+          toast.success(`🔔 ${msg.body}`, { position: "bottom-right" });
+        });
 
-
-        // ✅ Admin-only topic
+        // 👑 Admin-only topic
         if (role === "ADMIN") {
           client.subscribe("/topic/admins", (msg) => {
-            console.log("📩 Message (admin):", msg.body);
+            console.log("👑 Admin message:", msg.body);
             toast.info(`👑 Admin: ${msg.body}`, { position: "bottom-right" });
           });
-          console.log("📡 Subscribed to /topic/admins (Admin)");
         }
 
-        // ✅ Public topic (for all)
+        // 🌍 Public updates
         client.subscribe("/topic/updates", (msg) => {
           console.log("📢 Public update:", msg.body);
           toast.info(`💬 ${msg.body}`, { position: "bottom-right" });
         });
-        console.log("📢 Subscribed to /topic/updates (Public)");
       },
 
       onStompError: (frame) => {
@@ -64,12 +71,13 @@ console.log(`🎯 Subscribed to ${userQueue}`);
     client.activate();
     clientRef.current = client;
 
+    // 🧹 Cleanup on unmount
     return () => {
       console.log("🛑 Disconnecting STOMP client...");
       client.deactivate();
       clientRef.current = null;
     };
-  }, [username, role]);
+  }, [role]);
 
   return (
     <NotificationContext.Provider value={{ messages }}>
