@@ -10,6 +10,9 @@ import Register from "./components/Register.jsx";
 import ContactForm from "./components/ContactForm.jsx";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Header from "./components/Header.js";
+import DashboardLayout from "./layouts/DashboardLayout.jsx";
+
 
 export default function App() {
   const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
@@ -31,63 +34,25 @@ export default function App() {
   return (
     <NotificationProvider role={role}>
       <WebSocketProvider username={userEmail}>
-        <Router>
-          <nav
-            style={{
-              background: "#222",
-              color: "#fff",
-              padding: "10px 20px",
-              marginBottom: "20px",
-            }}
-          >
-            <Link to="/quote/new" style={{ color: "#fff", marginRight: "15px" }}>
-              ✍️ New Quote
-            </Link>
-            <Link to="/quotes" style={{ color: "#fff", marginRight: "15px" }}>
-              🔔 Live Updates
-            </Link>
-            <Link to="/contact" style={{ color: "#fff", marginRight: "15px" }}>
-              📞 Contact Us
-            </Link>
-
-            {userEmail ? (
-              <span
-                onClick={handleLogout}
-                style={{ cursor: "pointer", color: "#ff6666" }}
-              >
-                🚪 Logout
-              </span>
-            ) : (
-              <Link to="/login" style={{ color: "#fff" }}>
-                🔑 Login
-              </Link>
-            )}
-          </nav>
-
+      <Router>
+        <Header userEmail={userEmail} onLogout={handleLogout} />
+        {userEmail ? (
+          <DashboardLayout userEmail={userEmail} onLogout={handleLogout}>
+            <Routes>
+              <Route path="/quote/new" element={<QuoteForm />} />
+              <Route path="/quotes" element={<QuoteUpdates />} />
+              <Route path="/contact" element={<ContactForm />} />
+            </Routes>
+          </DashboardLayout>
+        ) : (
           <Routes>
-            {/* ✅ Public routes */}
-            <Route path="/contact" element={<ContactForm />} />
             <Route path="/login" element={<Login onLogin={setUserEmail} />} />
             <Route path="/register" element={<Register />} />
-
-            {/* ✅ Protected routes */}
-            {userEmail ? (
-              <>
-                <Route path="/quote/new" element={<QuoteForm />} />
-                <Route path="/quotes" element={<QuoteUpdates />} />
-              </>
-            ) : (
-              <>
-                <Route path="/quote/new" element={<Navigate to="/login" />} />
-                <Route path="/quotes" element={<Navigate to="/login" />} />
-              </>
-            )}
-
-            {/* Default route */}
-            <Route path="*" element={<Navigate to="/contact" />} />
+            <Route path="/contact" element={<ContactForm />} />
+            <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
-        </Router>
-
+        )}
+      </Router>
         <ToastContainer />
       </WebSocketProvider>
     </NotificationProvider>
