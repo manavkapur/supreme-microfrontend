@@ -190,19 +190,20 @@ export default function DashboardLayout({ children, userEmail, onLogout }) {
         </Drawer>
       </Box>
 
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: { xs: 2, sm: 3 },
-          mt: { xs: 8, sm: 10 },
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          minHeight: "calc(100vh - 64px)",
-        }}
-      >
-        {children}
-      </Box>
+{/* Main Content */}
+<Box
+  component="main"
+  sx={{
+    flexGrow: 1,
+    p: { xs: 2, sm: 3 },
+    mt: { xs: 8, sm: 10 },
+    ml: { sm: `${drawerWidth}px` }, // ✅ push content to right on desktop
+    minHeight: "calc(100vh - 64px)",
+    transition: "margin 0.3s ease", // smooth adjustment when resizing
+  }}
+>
+  {children}
+</Box>
     </Box>
   );
 }

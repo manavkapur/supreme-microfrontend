@@ -14,6 +14,7 @@ import Header from "./components/Header.js";
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import Home from "./components/Home.jsx";
 import Footer from "./components/Footer.jsx";
+import QuoteHistory from "./components/QuoteHistory.jsx";
 
 export default function App() {
   const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
@@ -41,8 +42,8 @@ export default function App() {
           <DashboardLayout userEmail={userEmail} onLogout={handleLogout}>
             <Routes>
               <Route path="/quote/new" element={<QuoteForm />} />
-              <Route path="/quotes" element={<QuoteUpdates />} />
               <Route path="/contact" element={<ContactForm />} />
+              <Route path="/quotes" element={<QuoteHistory userEmail={userEmail} />} />
             </Routes>
           </DashboardLayout>
         ) : (
