@@ -12,7 +12,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Header from "./components/Header.js";
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
-
+import Home from "./components/Home.jsx";
+import Footer from "./components/Footer.jsx";
 
 export default function App() {
   const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
@@ -46,12 +47,14 @@ export default function App() {
           </DashboardLayout>
         ) : (
           <Routes>
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login onLogin={setUserEmail} />} />
             <Route path="/register" element={<Register />} />
             <Route path="/contact" element={<ContactForm />} />
             <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         )}
+        <Footer />
       </Router>
         <ToastContainer />
       </WebSocketProvider>
