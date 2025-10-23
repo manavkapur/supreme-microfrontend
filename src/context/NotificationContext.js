@@ -1,4 +1,3 @@
-// src/context/NotificationContext.js
 import React, { createContext, useEffect, useState, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -8,30 +7,25 @@ import "react-toastify/dist/ReactToastify.css";
 export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children, role }) => {
-  const [messages, setMessages] = useState([]);
+  const [events, setEvents] = useState([]);
   const clientRef = useRef(null);
 
   useEffect(() => {
     console.log("🌐 Connecting to WebSocket...");
 
+    // 🚫 Avoid duplicate clients
     if (clientRef.current) return;
 
-    // ✅ Grab JWT token from localStorage
     const token = localStorage.getItem("token");
     if (!token) {
       console.warn("🚫 No JWT token found — aborting WebSocket connection");
       return;
     }
 
-    // ✅ Use SockJS (required for Spring STOMP)
-    const socketUrl = "http://localhost:8083/ws"; // <-- cleaned up
-
-    // ✅ Create STOMP client
+    const socketUrl = "http://localhost:8083/ws";
     const client = new Client({
       webSocketFactory: () => new SockJS(socketUrl),
       reconnectDelay: 5000,
-
-      // ✅ Send JWT via headers
       connectHeaders: {
         Authorization: `Bearer ${token}`,
       },
@@ -39,39 +33,69 @@ export const NotificationProvider = ({ children, role }) => {
       onConnect: () => {
         console.log("✅ Authenticated connection established via SockJS");
 
-        // 🎯 Subscribe to user-specific queue
-        const userQueue = "/user/queue/updates";
-        client.subscribe(userQueue, (msg) => {
-          console.log("🎯 User-specific:", msg.body);
-          toast.success(`🔔 ${msg.body}`, { position: "bottom-right" });
-        });
+        // Delay ensures user session binding
+        setTimeout(() => {
+          console.log("🧩 Subscribing to /user/queue/updates ...");
 
-        // 👑 Admin-only topic
-        if (role === "ADMIN") {
-          client.subscribe("/topic/admins", (msg) => {
-            console.log("👑 Admin message:", msg.body);
-            toast.info(`👑 Admin: ${msg.body}`, { position: "bottom-right" });
+          // 🎯 Subscribe to user queue
+          const email = localStorage.getItem("userEmail")?.toLowerCase();
+          const destination = `/user/${email}/queue/updates`;
+          console.log("🧩 Subscribing to", destination);
+          client.subscribe(destination, (msg) => {
+            console.log("🎯 [RAW MESSAGE] =>", msg.body);
+
+            try {
+              const data = JSON.parse(msg.body);
+              console.log("✅ [PARSED DATA] =>", data);
+
+              setEvents((prev) => [...prev, data]);
+
+              toast.success(`💬 ${data.message || "New update received"}`, {
+                position: "bottom-right",
+                autoClose: 4000,
+                theme: "colored",
+              });
+            } catch (err) {
+              console.warn("⚠️ [NON-JSON MESSAGE]", msg.body);
+              setEvents((prev) => [...prev, { message: msg.body }]);
+
+              toast.info(`📩 ${msg.body}`, {
+                position: "bottom-right",
+                autoClose: 4000,
+                theme: "colored",
+              });
+            }
           });
-        }
 
-        // 🌍 Public updates
-        client.subscribe("/topic/updates", (msg) => {
-          console.log("📢 Public update:", msg.body);
-          toast.info(`💬 ${msg.body}`, { position: "bottom-right" });
-        });
+          // 👑 Admin messages
+          if (role === "ADMIN") {
+            client.subscribe("/topic/admins", (msg) => {
+              console.log("👑 Admin message:", msg.body);
+              toast.info(`👑 ${msg.body}`, { position: "bottom-right" });
+            });
+          }
+
+          // 🌍 Public messages
+          client.subscribe("/topic/updates", (msg) => {
+            console.log("🌍 Public message:", msg.body);
+          });
+        }, 1000);
       },
 
       onStompError: (frame) => {
-        console.error("❌ STOMP error:", frame);
+        console.error("❌ STOMP Error:", frame);
       },
 
-      debug: (str) => console.log("🔌 [STOMP]", str),
+      onWebSocketError: (event) => {
+        console.error("🚫 WebSocket Error:", event);
+      },
+
+      debug: (str) => console.log("🔌 [STOMP DEBUG]", str),
     });
 
     client.activate();
     clientRef.current = client;
 
-    // 🧹 Cleanup on unmount
     return () => {
       console.log("🛑 Disconnecting STOMP client...");
       client.deactivate();
@@ -80,7 +104,7 @@ export const NotificationProvider = ({ children, role }) => {
   }, [role]);
 
   return (
-    <NotificationContext.Provider value={{ messages }}>
+    <NotificationContext.Provider value={{ events }}>
       {children}
     </NotificationContext.Provider>
   );

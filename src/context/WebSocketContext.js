@@ -1,4 +1,4 @@
-// src/context/WebSocketContext.js
+// Corrected version
 import React, { createContext, useEffect, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -9,6 +9,7 @@ export const WebSocketContext = createContext();
 export const WebSocketProvider = ({ children, username }) => {
   const [connected, setConnected] = useState(false);
   const [client, setClient] = useState(null);
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
     if (!username) {
@@ -16,59 +17,61 @@ export const WebSocketProvider = ({ children, username }) => {
       return;
     }
 
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("🚫 Missing JWT for WebSocket");
+      return;
+    }
+
     console.log("🌐 Connecting WebSocket for user:", username);
 
-    const socket = new SockJS(`http://localhost:8085/ws?username=${username}`);
+const stompClient = new Client({
+  webSocketFactory: () => new SockJS("http://localhost:8083/ws"),
+  reconnectDelay: 5000,
+  connectHeaders: {
+    Authorization: `Bearer ${token}`,
+  },
+  onConnect: () => {
+    console.log("✅ Connected to Channel Server as", username);
+    setConnected(true);
 
-    const stompClient = new Client({
-      webSocketFactory: () => socket,
-      reconnectDelay: 5000,
-      connectHeaders: {
-        login: username,
-        passcode: "guest",
-      },
-      onConnect: () => {
-        console.log("✅ Connected to WebSocket server as", username);
-        setConnected(true);
-
-        // Subscribe to public updates
-        stompClient.subscribe("/topic/updates", (msg) => {
-          const message = msg.body;
-          console.log("📩 Public Message received:", message);
-
-          toast.info(`🔔 ${message}`, {
-            position: "bottom-right",
-            autoClose: 4000,
-            theme: "colored",
-          });
+    // ✅ Subscribe to user-specific updates
+    stompClient.subscribe("/user/queue/updates", (msg) => {
+      console.log("🎯 Private message received:", msg.body);
+      try {
+        const data = JSON.parse(msg.body);
+        setEvents((prev) => [...prev, data]);
+        toast.success(`💬 ${data.message || "New update!"}`, {
+          position: "bottom-right",
+          autoClose: 3000,
         });
-
-        // Subscribe to user-specific queue
-        const userQueue = `/user/${username}/queue/updates`;
-        stompClient.subscribe(userQueue, (msg) => {
-          console.log(`🎯 Private message for ${username}:`, msg.body);
-          toast.success(`💬 ${msg.body}`, {
-            position: "bottom-right",
-            autoClose: 4000,
-            theme: "colored",
-          });
-        });
-      },
-      onStompError: (frame) => {
-        console.error("❌ STOMP error:", frame.headers["message"]);
-      },
+      } catch {
+        toast.info(`📩 ${msg.body}`);
+      }
     });
+
+    // Optional: global topic
+    stompClient.subscribe("/topic/updates", (msg) => {
+      console.log("🌍 Public update:", msg.body);
+    });
+  },
+  onStompError: (frame) => {
+    console.error("❌ STOMP error:", frame.headers["message"]);
+  },
+
+  // ✅ Add this debug line
+  debug: (str) => console.log("🔌 [STOMP DEBUG]", str),
+});
+
 
     stompClient.activate();
     setClient(stompClient);
 
-    return () => {
-      if (stompClient) stompClient.deactivate();
-    };
+    return () => stompClient.deactivate();
   }, [username]);
 
   return (
-    <WebSocketContext.Provider value={{ connected, client }}>
+    <WebSocketContext.Provider value={{ connected, client, events }}>
       {children}
     </WebSocketContext.Provider>
   );

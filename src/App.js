@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
 import axios from "axios";
 import { NotificationProvider } from "./context/NotificationContext";
-import { WebSocketProvider } from "./context/WebSocketContext";
 import QuoteForm from "./components/QuoteForm";
 import QuoteUpdates from "./components/QuoteUpdates";
 import Login from "./components/Login";
@@ -35,7 +34,6 @@ export default function App() {
 
   return (
     <NotificationProvider role={role}>
-      <WebSocketProvider username={userEmail}>
       <Router>
         <Header userEmail={userEmail} onLogout={handleLogout} />
         {userEmail ? (
@@ -58,7 +56,7 @@ export default function App() {
         <Footer />
       </Router>
         <ToastContainer />
-      </WebSocketProvider>
+
     </NotificationProvider>
   );
 }
