@@ -4,6 +4,14 @@ import SockJS from "sockjs-client";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const safeParse = (body) => {
+  try {
+    return JSON.parse(body);
+  } catch {
+    return { message: body };
+  }
+};
+
 export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children, role }) => {
@@ -69,9 +77,22 @@ export const NotificationProvider = ({ children, role }) => {
 
           // 👑 Admin messages
           if (role === "ADMIN") {
+            // Admin-only broadcast channels
             client.subscribe("/topic/admins", (msg) => {
-              console.log("👑 Admin message:", msg.body);
+              console.log("👑 Admin:", msg.body);
               toast.info(`👑 ${msg.body}`, { position: "bottom-right" });
+            });
+
+            client.subscribe("/topic/quotes", (msg) => {
+              console.log("📄 Quote Event:", msg.body);
+              const data = safeParse(msg.body);
+              setEvents((prev) => [...prev, { ...data, source: "quotes" }]);
+            });
+
+            client.subscribe("/topic/contacts", (msg) => {
+              console.log("📞 Contact Event:", msg.body);
+              const data = safeParse(msg.body);
+              setEvents((prev) => [...prev, { ...data, source: "contacts" }]);
             });
           }
 

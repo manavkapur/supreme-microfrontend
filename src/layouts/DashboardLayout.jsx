@@ -1,4 +1,3 @@
-// src/layouts/DashboardLayout.jsx
 import React, { useContext, useState } from "react";
 import {
   Box,
@@ -26,6 +25,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
+import DashboardIcon from "@mui/icons-material/Dashboard";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import LightModeIcon from "@mui/icons-material/LightMode";
@@ -35,7 +35,7 @@ import { ThemeContext } from "../context/ThemeContext";
 
 const drawerWidth = 240;
 
-export default function DashboardLayout({ children, userEmail, onLogout }) {
+export default function DashboardLayout({ children, userEmail, onLogout, role }) {
   const { mode, toggleTheme } = useContext(ThemeContext);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -47,6 +47,21 @@ export default function DashboardLayout({ children, userEmail, onLogout }) {
   const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
+  // ✅ Menu Items (conditional for Admin)
+  const menuItems = [
+    { text: "New Quote", icon: <HomeIcon />, path: "/quote/new" },
+    { text: "Live Updates", icon: <NotificationsIcon />, path: "/quotes" },
+    { text: "Contact Us", icon: <ContactMailIcon />, path: "/contact" },
+  ];
+
+  if (role === "ADMIN") {
+    menuItems.push({
+      text: "🛠 Admin Dashboard",
+      icon: <DashboardIcon color="secondary" />,
+      path: "/admin/dashboard",
+    });
+  }
+
   const drawer = (
     <Box sx={{ textAlign: "center", mt: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
@@ -54,11 +69,7 @@ export default function DashboardLayout({ children, userEmail, onLogout }) {
       </Typography>
       <Divider />
       <List>
-        {[
-          { text: "New Quote", icon: <HomeIcon />, path: "/quote/new" },
-          { text: "Live Updates", icon: <NotificationsIcon />, path: "/quotes" },
-          { text: "Contact Us", icon: <ContactMailIcon />, path: "/contact" },
-        ].map((item) => (
+        {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding>
             <ListItemButton
               onClick={() => {
@@ -135,7 +146,7 @@ export default function DashboardLayout({ children, userEmail, onLogout }) {
               <Box sx={{ px: 2, py: 1 }}>
                 <Typography variant="subtitle2">{userEmail}</Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Logged in
+                  {role === "ADMIN" ? "Admin" : "User"} • Logged in
                 </Typography>
               </Box>
               <Divider />
@@ -157,8 +168,8 @@ export default function DashboardLayout({ children, userEmail, onLogout }) {
         </Toolbar>
       </AppBar>
 
+      {/* Sidebar */}
       <Box component="nav">
-        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -166,23 +177,17 @@ export default function DashboardLayout({ children, userEmail, onLogout }) {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-            },
+            "& .MuiDrawer-paper": { width: drawerWidth },
           }}
         >
           {drawer}
         </Drawer>
 
-        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": {
-              width: drawerWidth,
-              boxSizing: "border-box",
-            },
+            "& .MuiDrawer-paper": { width: drawerWidth, boxSizing: "border-box" },
           }}
           open
         >
@@ -190,20 +195,20 @@ export default function DashboardLayout({ children, userEmail, onLogout }) {
         </Drawer>
       </Box>
 
-{/* Main Content */}
-<Box
-  component="main"
-  sx={{
-    flexGrow: 1,
-    p: { xs: 2, sm: 3 },
-    mt: { xs: 8, sm: 10 },
-    ml: { sm: `${drawerWidth}px` }, // ✅ push content to right on desktop
-    minHeight: "calc(100vh - 64px)",
-    transition: "margin 0.3s ease", // smooth adjustment when resizing
-  }}
->
-  {children}
-</Box>
+      {/* Main Content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: { xs: 2, sm: 3 },
+          mt: { xs: 8, sm: 10 },
+          ml: { sm: `${drawerWidth}px` },
+          minHeight: "calc(100vh - 64px)",
+          transition: "margin 0.3s ease",
+        }}
+      >
+        {children}
+      </Box>
     </Box>
   );
 }

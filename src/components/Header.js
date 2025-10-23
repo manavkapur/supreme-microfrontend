@@ -26,19 +26,25 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LoginIcon from "@mui/icons-material/Login";
+import AdminDashboard from "./AdminDashboard";
 
-export default function Header({ userEmail, onLogout }) {
+export default function Header({ userEmail, role, onLogout }) {
   const { mode, toggleTheme } = useContext(ThemeContext);
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width:600px)");
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
 
+
   const navLinks = [
     { label: "✍️ New Quote", to: "/quote/new" },
     { label: "🔔 Live Updates", to: "/quotes" },
     { label: "📞 Contact", to: "/contact" },
   ];
+
+  if (role === "ADMIN") {
+    navLinks.push({ label: "🛠 Admin Dashboard", to: "/admin/dashboard" });
+  }
 
   // ✅ Drawer menu for mobile screens
   const drawer = (

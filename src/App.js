@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import axios from "axios";
 import { NotificationProvider } from "./context/NotificationContext";
 import QuoteForm from "./components/QuoteForm";
-import QuoteUpdates from "./components/QuoteUpdates";
 import Login from "./components/Login";
 import Register from "./components/Register.jsx";
 import ContactForm from "./components/ContactForm.jsx";
@@ -14,6 +13,7 @@ import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import Home from "./components/Home.jsx";
 import Footer from "./components/Footer.jsx";
 import QuoteHistory from "./components/QuoteHistory.jsx";
+import AdminDashboard from "./components/AdminDashboard.jsx";
 
 export default function App() {
   const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
@@ -23,25 +23,39 @@ export default function App() {
     const token = localStorage.getItem("token");
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      try {
+        const decoded = JSON.parse(atob(token.split(".")[1]));
+        setRole(decoded.role || "USER");
+        console.log("✅ User role set to:", decoded.role);
+      } catch (err) {
+        console.error("❌ Invalid JWT:", err);
+      }
     }
   }, []);
 
   const handleLogout = () => {
     localStorage.clear();
     setUserEmail(null);
-    window.location.href = "/contact"; // 👈 Redirect guest to Contact page
+    window.location.href = "/contact"; // Redirect to contact page
   };
 
   return (
     <NotificationProvider role={role}>
       <Router>
-        <Header userEmail={userEmail} onLogout={handleLogout} />
+        <Header userEmail={userEmail} role={role} onLogout={handleLogout} />
+
         {userEmail ? (
-          <DashboardLayout userEmail={userEmail} onLogout={handleLogout}>
+          <DashboardLayout userEmail={userEmail} onLogout={handleLogout} role={role}>
             <Routes>
               <Route path="/quote/new" element={<QuoteForm />} />
               <Route path="/contact" element={<ContactForm />} />
               <Route path="/quotes" element={<QuoteHistory userEmail={userEmail} />} />
+              {role === "ADMIN" && (
+                <Route
+                  path="/admin/dashboard"
+                  element={<AdminDashboard userEmail={userEmail} />}
+                />
+              )}
             </Routes>
           </DashboardLayout>
         ) : (
@@ -53,10 +67,11 @@ export default function App() {
             <Route path="*" element={<Navigate to="/login" />} />
           </Routes>
         )}
+
         <Footer />
       </Router>
-        <ToastContainer />
 
+      <ToastContainer />
     </NotificationProvider>
   );
 }
