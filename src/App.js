@@ -17,25 +17,33 @@ import AdminDashboard from "./components/AdminDashboard.jsx";
 
 export default function App() {
   const [userEmail, setUserEmail] = useState(localStorage.getItem("userEmail"));
-  const [role, setRole] = useState("USER");
+  const [role, setRole] = useState(localStorage.getItem("role") || "USER");
 
+  // Whenever userEmail changes (login/logout), update axios header and role
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       try {
         const decoded = JSON.parse(atob(token.split(".")[1]));
-        setRole(decoded.role || "USER");
-        console.log("✅ User role set to:", decoded.role);
+        const newRole = decoded.role || localStorage.getItem("role") || "USER";
+        setRole(newRole);
+        console.log("✅ User role set to:", newRole);
       } catch (err) {
         console.error("❌ Invalid JWT:", err);
+        // fallback to whatever is stored
+        setRole(localStorage.getItem("role") || "USER");
       }
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
+      setRole("USER");
     }
-  }, []);
+  }, [userEmail]);
 
   const handleLogout = () => {
     localStorage.clear();
     setUserEmail(null);
+    setRole("USER");
     window.location.href = "/contact"; // Redirect to contact page
   };
 
@@ -51,10 +59,7 @@ export default function App() {
               <Route path="/contact" element={<ContactForm />} />
               <Route path="/quotes" element={<QuoteHistory userEmail={userEmail} />} />
               {role === "ADMIN" && (
-                <Route
-                  path="/admin/dashboard"
-                  element={<AdminDashboard userEmail={userEmail} />}
-                />
+                <Route path="/admin/dashboard" element={<AdminDashboard userEmail={userEmail} />} />
               )}
             </Routes>
           </DashboardLayout>

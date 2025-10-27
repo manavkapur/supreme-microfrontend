@@ -9,7 +9,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -20,6 +20,7 @@ export default function Login({ onLogin }) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -32,13 +33,36 @@ export default function Login({ onLogin }) {
       });
 
       const { token, userId, email: userEmail } = res.data;
+
+      // Save core items
       localStorage.setItem("token", token);
       localStorage.setItem("userEmail", userEmail);
       localStorage.setItem("userId", userId);
 
+      // Try to decode role from JWT; fallback to 'USER'
+      let role = "USER";
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        role = payload.role || role;
+      } catch (err) {
+        console.warn("⚠️ Could not decode token role:", err);
+      }
+      localStorage.setItem("role", role);
+
+      // Set axios header immediately
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
       toast.success("✅ Login successful!");
+
+      // Trigger parent to update userEmail (this causes App to refresh role)
       onLogin(userEmail);
+
+      // Optionally navigate immediately (admins go to admin dashboard)
+      if (role === "ADMIN") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/quotes");
+      }
     } catch (err) {
       console.error("❌ Login failed:", err);
       toast.error("Invalid email or password");
@@ -109,7 +133,7 @@ export default function Login({ onLogin }) {
           Don’t have an account?{" "}
           <Link
             component={RouterLink}
-            to="/register"   // ✅ Now this navigates properly
+            to="/register"
             variant="body2"
             underline="hover"
             sx={{ color: "primary.main", fontWeight: 500, cursor: "pointer" }}
