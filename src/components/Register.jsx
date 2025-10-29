@@ -27,7 +27,7 @@ export default function Register({ onRegistered }) {
     setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:8086/api/users/register", form);
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/user-service/api/users/register`, form);
       console.log("✅ Registered successfully:", res.data);
       toast.success("✅ Registration successful! You can now login.");
       onRegistered?.();

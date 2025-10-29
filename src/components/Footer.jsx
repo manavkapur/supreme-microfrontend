@@ -22,7 +22,7 @@ export default function Footer() {
         variant="h6"
         sx={{ fontWeight: 600, mb: 1, fontSize: { xs: "1.1rem", sm: "1.3rem" } }}
       >
-        Supreme Solutions
+        Supreme Build Solutions
       </Typography>
 
       {/* 🌐 Quick Links */}
@@ -79,7 +79,7 @@ export default function Footer() {
           fontSize: "0.9rem",
         }}
       >
-        © {new Date().getFullYear()} Supreme Solutions. All Rights Reserved.
+        © {new Date().getFullYear()} Supreme Build Solutions. All Rights Reserved.
       </Typography>
     </Box>
   );

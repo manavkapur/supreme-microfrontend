@@ -13,7 +13,7 @@ export default function QuoteHistory({ userEmail }) {
   useEffect(() => {
     if (!userEmail) return;
     axios
-      .get(`http://localhost:8087/api/quotes/user/${userEmail}`)
+      .get(`${process.env.REACT_APP_API_URL}/quote-service/api/quotes/user/${userEmail}`)
       .then((res) => setQuotes(res.data))
       .catch((err) => console.error("Failed to load quote history:", err));
   }, [userEmail]);

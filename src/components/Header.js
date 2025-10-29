@@ -53,7 +53,7 @@ export default function Header({ userEmail, role, onLogout }) {
         variant="h6"
         sx={{ my: 2, fontWeight: 600, color: mode === "dark" ? "#fff" : "#1976d2" }}
       >
-        Supreme Solutions
+        Supreme Build Solutions
       </Typography>
       <Divider />
       <List>
@@ -128,7 +128,7 @@ export default function Header({ userEmail, role, onLogout }) {
                 letterSpacing: "0.5px",
               }}
             >
-              Supreme Solutions
+              Supreme Build Solutions
             </Typography>
 
             {!isMobile &&

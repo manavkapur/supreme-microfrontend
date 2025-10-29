@@ -25,7 +25,7 @@ export default function Home() {
       <Box
         sx={{
           backgroundImage:
-            "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1618221321788-0997a26975cb?auto=format&fit=crop&w=1600&q=80')",
+            "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.4)), url('https://plus.unsplash.com/premium_photo-1754030525795-e872b9b37d55?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=987')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           color: "#fff",
@@ -107,7 +107,7 @@ export default function Home() {
               color="info"
               size="large"
               startIcon={<EmailIcon />}
-              href="mailto:info@supremesolutions.com"
+              href="mailto:info@supremebuildsolutions.com"
               sx={{
                 borderRadius: 2,
                 width: { xs: "100%", sm: "auto" },
@@ -142,17 +142,17 @@ export default function Home() {
     {
       title: "🏗️ Construction Fencing",
       desc: "Durable, galvanized fencing solutions that secure your construction sites and heavy equipment efficiently.",
-      img: "https://images.unsplash.com/photo-1600585154600-1819e8d5db6a?auto=format&fit=crop&w=900&q=80",
+      img: "https://images.unsplash.com/photo-1642553204922-bbbe0fe55749?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=991",
     },
     {
       title: "🎉 Event Barriers",
       desc: "Aesthetic and easy-to-install barriers that maintain crowd flow while blending seamlessly into event spaces.",
-      img: "https://images.unsplash.com/photo-1572375896689-1d7d4b57a5c3?auto=format&fit=crop&w=900&q=80",
+      img: "https://images.unsplash.com/photo-1759782180786-5cd4b05e3b6c?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=1973",
     },
     {
       title: "🚧 Crowd Control Solutions",
       desc: "Reliable and portable control systems ideal for public gatherings, ensuring both order and safety.",
-      img: "https://images.unsplash.com/photo-1603297631969-37a80b84f8e7?auto=format&fit=crop&w=900&q=80",
+      img: "https://images.unsplash.com/photo-1574353788609-6c2bda745ac4?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070",
     },
   ].map((item, idx) => (
     <Paper

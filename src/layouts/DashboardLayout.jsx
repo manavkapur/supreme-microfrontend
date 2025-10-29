@@ -65,7 +65,7 @@ export default function DashboardLayout({ children, userEmail, onLogout, role })
   const drawer = (
     <Box sx={{ textAlign: "center", mt: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
-        Supreme Solutions
+        Supreme Build Solutions
       </Typography>
       <Divider />
       <List>

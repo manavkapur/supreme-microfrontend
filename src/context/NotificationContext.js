@@ -1,3 +1,4 @@
+// src/context/NotificationContext.js
 import React, { createContext, useEffect, useState, useRef } from "react";
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -6,9 +7,12 @@ import "react-toastify/dist/ReactToastify.css";
 
 const safeParse = (body) => {
   try {
+    // if body is already an object, return it
+    if (typeof body === "object") return body;
     return JSON.parse(body);
   } catch {
-    return { message: body };
+    // fallback to wrapping raw body
+    return { message: typeof body === "string" ? body : JSON.stringify(body) };
   }
 };
 
@@ -21,7 +25,7 @@ export const NotificationProvider = ({ children, role }) => {
   useEffect(() => {
     console.log("🌐 Connecting to WebSocket...");
 
-    // 🚫 Avoid duplicate clients
+    // Avoid duplicate clients
     if (clientRef.current) return;
 
     const token = localStorage.getItem("token");
@@ -30,7 +34,7 @@ export const NotificationProvider = ({ children, role }) => {
       return;
     }
 
-    const socketUrl = "http://localhost:8083/ws";
+    const socketUrl = "https://api.supremebuildsolutions.com/ws";
     const client = new Client({
       webSocketFactory: () => new SockJS(socketUrl),
       reconnectDelay: 5000,
@@ -41,66 +45,52 @@ export const NotificationProvider = ({ children, role }) => {
       onConnect: () => {
         console.log("✅ Authenticated connection established via SockJS");
 
-        // Delay ensures user session binding
+        // small delay so server attaches user session
         setTimeout(() => {
-          console.log("🧩 Subscribing to /user/queue/updates ...");
-
-          // 🎯 Subscribe to user queue
           const email = localStorage.getItem("userEmail")?.toLowerCase();
-          const destination = `/user/${email}/queue/updates`;
-          console.log("🧩 Subscribing to", destination);
-          client.subscribe(destination, (msg) => {
-            console.log("🎯 [RAW MESSAGE] =>", msg.body);
+          if (email) {
+            const dest = `/user/${email}/queue/updates`;
+            console.log("🧩 Subscribing to", dest);
+            client.subscribe(dest, (msg) => {
+              console.log("🎯 [USER MESSAGE] =>", msg.body);
+              const parsed = safeParse(msg.body);
+              setEvents((prev) => [...prev, parsed]);
+              if (parsed.message) {
+                toast.info(parsed.message, { position: "bottom-right", autoClose: 3500 });
+              }
+            });
+          } else {
+            console.warn("⚠️ No userEmail in localStorage — skipping user subscription");
+          }
 
-            try {
-              const data = JSON.parse(msg.body);
-              console.log("✅ [PARSED DATA] =>", data);
-
-              setEvents((prev) => [...prev, data]);
-
-              toast.success(`💬 ${data.message || "New update received"}`, {
-                position: "bottom-right",
-                autoClose: 4000,
-                theme: "colored",
-              });
-            } catch (err) {
-              console.warn("⚠️ [NON-JSON MESSAGE]", msg.body);
-              setEvents((prev) => [...prev, { message: msg.body }]);
-
-              toast.info(`📩 ${msg.body}`, {
-                position: "bottom-right",
-                autoClose: 4000,
-                theme: "colored",
-              });
-            }
-          });
-
-          // 👑 Admin messages
+          // Admin subscriptions
           if (role === "ADMIN") {
-            // Admin-only broadcast channels
+            console.log("👑 Subscribing admin topics");
             client.subscribe("/topic/admins", (msg) => {
-              console.log("👑 Admin:", msg.body);
-              toast.info(`👑 ${msg.body}`, { position: "bottom-right" });
+              const parsed = safeParse(msg.body);
+              console.log("👑 [ADMIN]", parsed);
+              setEvents((prev) => [...prev, parsed]);
+              if (parsed.message) toast.info(`Admin: ${parsed.message}`, { position: "bottom-right" });
             });
 
             client.subscribe("/topic/quotes", (msg) => {
-              console.log("📄 Quote Event:", msg.body);
-              const data = safeParse(msg.body);
-              setEvents((prev) => [...prev, { ...data, source: "quotes" }]);
+              const parsed = safeParse(msg.body);
+              console.log("📄 [QUOTE EVENT]", parsed);
+              setEvents((prev) => [...prev, { ...parsed, source: "quotes" }]);
             });
 
             client.subscribe("/topic/contacts", (msg) => {
-              console.log("📞 Contact Event:", msg.body);
-              const data = safeParse(msg.body);
-              setEvents((prev) => [...prev, { ...data, source: "contacts" }]);
+              const parsed = safeParse(msg.body);
+              console.log("📞 [CONTACT EVENT]", parsed);
+              setEvents((prev) => [...prev, { ...parsed, source: "contacts" }]);
             });
           }
 
-          // 🌍 Public messages
+          // Public broadcast (optional)
           client.subscribe("/topic/updates", (msg) => {
-            console.log("🌍 Public message:", msg.body);
+            console.log("🌍 [PUBLIC]", msg.body);
           });
-        }, 1000);
+        }, 600);
       },
 
       onStompError: (frame) => {
@@ -119,10 +109,14 @@ export const NotificationProvider = ({ children, role }) => {
 
     return () => {
       console.log("🛑 Disconnecting STOMP client...");
-      client.deactivate();
+      try {
+        client.deactivate();
+      } catch (e) {
+        /* ignore */
+      }
       clientRef.current = null;
     };
-  }, [role]);
+  }, [role]); // re-run when role changes (subscribe/unsubscribe admin topics)
 
   return (
     <NotificationContext.Provider value={{ events }}>

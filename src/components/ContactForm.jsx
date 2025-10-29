@@ -30,7 +30,7 @@ export default function ContactForm() {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     try {
-      const res = await axios.post("http://localhost:8082/api/contact", form, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/contact-service/api/contact`, form, {
         headers,
       });
       toast.success("📩 Contact form submitted successfully!");
