@@ -1,18 +1,6 @@
 ## The architecture of this project 
 ⚡ Hybrid Notification Flow (Web + Mobile)
 
-Quote / Contact Service
-        │
-        ▼
-     Redis Event
-        │
-        ▼
-Channel Server ──► WebSocket (online users)
-        │
-        ▼
-Notification Service
-     ├──► sendWebNotification()  → REST or Redis (for web)
-     └──► sendMobileNotification() → FCM (for mobile)
 
 
 Quote/Contact Service
