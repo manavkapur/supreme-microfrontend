@@ -49,14 +49,14 @@ export default function Footer() {
       {/* 📱 Social Icons */}
       <Stack direction="row" justifyContent="center" spacing={2} sx={{ mb: 2 }}>
         <IconButton
-          href="tel:+919999999999"
+          href="tel:+17803273111"
           color="inherit"
           sx={{ backgroundColor: "rgba(255,255,255,0.1)" }}
         >
           <PhoneIcon />
         </IconButton>
         <IconButton
-          href="https://wa.me/919999999999"
+          href="https://wa.me/+17803273111"
           target="_blank"
           color="inherit"
           sx={{ backgroundColor: "rgba(255,255,255,0.1)" }}

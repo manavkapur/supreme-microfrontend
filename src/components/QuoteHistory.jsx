@@ -10,13 +10,25 @@ export default function QuoteHistory({ userEmail }) {
   const { events } = useContext(NotificationContext); // 👈 Access live updates
 
   // 🔹 Initial load
-  useEffect(() => {
-    if (!userEmail) return;
-    axios
-      .get(`${process.env.REACT_APP_API_URL}/quote-service/api/quotes/user/${userEmail}`)
-      .then((res) => setQuotes(res.data))
-      .catch((err) => console.error("Failed to load quote history:", err));
-  }, [userEmail]);
+useEffect(() => {
+  if (!userEmail) return;
+  axios
+    .get(`${process.env.REACT_APP_API_URL}/quote-service/api/quotes/user/${userEmail}`)
+    .then((res) => {
+      console.log("✅ Quote API response:", res.data);
+      const data = res.data;
+      if (Array.isArray(data)) {
+        setQuotes(data);
+      } else if (data && Array.isArray(data.quotes)) {
+        setQuotes(data.quotes);
+      } else if (data) {
+        setQuotes([data]);
+      } else {
+        setQuotes([]);
+      }
+    })
+    .catch((err) => console.error("Failed to load quote history:", err));
+}, [userEmail]);
 
   // 🔹 React to WebSocket updates
   useEffect(() => {

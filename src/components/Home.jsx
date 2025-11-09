@@ -76,7 +76,7 @@ export default function Home() {
               color="primary"
               size="large"
               startIcon={<PhoneIcon />}
-              href="tel:+919999999999"
+              href="tel:+17803273111"
               sx={{
                 borderRadius: 2,
                 width: { xs: "100%", sm: "auto" },
@@ -91,7 +91,7 @@ export default function Home() {
               color="success"
               size="large"
               startIcon={<WhatsAppIcon />}
-              href="https://wa.me/919999999999"
+              href="https://wa.me/+17803273111"
               target="_blank"
               sx={{
                 borderRadius: 2,
