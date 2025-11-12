@@ -26,7 +26,6 @@ import DarkModeIcon from "@mui/icons-material/DarkMode";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
 import LoginIcon from "@mui/icons-material/Login";
-import AdminDashboard from "./AdminDashboard";
 
 export default function Header({ userEmail, role, onLogout }) {
   const { mode, toggleTheme } = useContext(ThemeContext);
