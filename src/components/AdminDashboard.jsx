@@ -146,24 +146,30 @@ export default function AdminDashboard() {
     }
   }, [events]);
 
-  const updateQuoteStatus = async (id, newStatus) => {
-    try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/quote-service/api/quotes/admin/${id}/status`,
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`✅ Quote #${id} ${newStatus}`);
-      // remove from current list (optimistic)
-      setQuotes((prev) => prev.filter((q) => String(q.id) !== String(id)));
-      // refresh page to keep consistent counts
-      fetchPendingQuotes(page);
-    } catch (err) {
-      console.error("Failed to update quote:", err);
-      toast.error("Failed to update quote");
-    }
-  };
+const updateQuoteStatus = async (id, newStatus) => {
+  try {
+    const token = localStorage.getItem("token");
+    await axios.post(
+      `${process.env.REACT_APP_API_URL}/quote-service/api/quotes/admin/${id}/status`,
+      { status: newStatus },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"   // 🔥 REQUIRED
+        }
+      }
+    );
+
+    toast.success(`✅ Quote #${id} ${newStatus}`);
+    setQuotes((prev) => prev.filter((q) => String(q.id) !== String(id)));
+    fetchPendingQuotes(page);
+
+  } catch (err) {
+    console.error("Failed to update quote:", err);
+    toast.error("Failed to update quote");
+  }
+};
+
 
   const colorForSource = (source) => {
     switch (source) {
