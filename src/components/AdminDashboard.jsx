@@ -149,7 +149,7 @@ export default function AdminDashboard() {
   const updateQuoteStatus = async (id, newStatus) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.put(
+      await axios.post(
         `${process.env.REACT_APP_API_URL}/quote-service/api/quotes/admin/${id}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
