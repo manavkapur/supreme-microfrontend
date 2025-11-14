@@ -36,7 +36,7 @@ export const NotificationProvider = ({ children, role }) => {
 
     const socketUrl = "https://api.supremebuildsolutions.com/ws";
     const client = new Client({
-      webSocketFactory: () => new SockJS(socketUrl),
+      webSocketFactory: () => new WebSocket(socketUrl),
       reconnectDelay: 5000,
       connectHeaders: {
         Authorization: `Bearer ${token}`,
